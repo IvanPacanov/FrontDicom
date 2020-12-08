@@ -1,14 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import IPAddressContainer from "./IPAddressContainer";
-
-var destination = document.querySelector("#container")
+import Main from "./Main";
 
 ReactDOM.render(
   <div>
-    <IPAddressContainer />
+    <Main/>
   </div>,
-  destination
+  document.getElementById("container")
 );
 

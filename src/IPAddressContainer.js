@@ -1,6 +1,7 @@
 import React, {Component} from "react";
-import axios from 'axios'
-
+import "./index.css"
+import "./PatientList.css";
+import ListOfPatient from "./ListOfPatient";
 
 var xhr;
 
@@ -9,7 +10,9 @@ class IPAddressContainer extends Component{
     {
         super(props);
         this.SendInfo = this.SendInfo.bind(this);
-        this.test ="";
+        this.state ={items: [],
+            showResults: true};
+        this.props.history.push("/");
         this.LoginModel ={
             ip_address: "",
             port_server:"",
@@ -18,12 +21,12 @@ class IPAddressContainer extends Component{
             aet_client: ""
             
         };
-      
+        //this.
         this.processRequest = this.processRequest.bind(this);
     }
     SendInfo(e){
         xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://192.168.1.104:5000/api/PACS/move");
+        xhr.open("POST", "https://192.168.1.100:5000/api/PACS/Login");
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function () {
             console.log('test');
@@ -33,12 +36,7 @@ class IPAddressContainer extends Component{
             }
         };
 
-       // test = JSON.stringify(this.LoginModel, (key, value) =>
-        // typeof value === 'string'
-        //   ? value // return value * 2 for numbers
-        //   : undefined     // return everything else unchanged
-        // );
-      this.test=JSON.stringify({
+    this.test=JSON.stringify({
         "Ip_address": this.LoginModel.ip_address.value, 
         "Port_server": this.LoginModel.port_server.value, 
         "Aet_server": this.LoginModel.aet_server.value, 
@@ -52,67 +50,64 @@ class IPAddressContainer extends Component{
             "Port_client": this.LoginModel.port_client.value, 
             "Aet_client": this.LoginModel.aet_client.value
         }));
-      //  xhr.send(JSON.stringify(this.LoginModel));
         xhr.addEventListener("readystatechange", this.processRequest, false); 
         
-    }
+    }   
+    selectedItem(text){
+        this.state.items.filter(function(item){
+            return (item.text === text);
+        });
 
-    componentDidMount(){
-        // xhr = new XMLHttpRequest();
-        // xhr.open("POST", "https://192.168.1.100:5000/api/PACS/move");
-        // xhr.setRequestHeader("Content-Type", "application/json");
-        // xhr.onreadystatechange = function () {
-        //     console.log('test');
-        //     if (xhr.readyState === 4 && xhr.status === 'success') {
-        //         console.log('test');
-        //         alert(xhr.responseText);
-        //     }
-        // };
-        // xhr.send(JSON.stringify({"ID":"01"}));
-        
-        // xhr.addEventListener("readystatechange", this.processRequest, false);  
-    
     }
-
     processRequest(){
         if(xhr.readyState === 4 && xhr.status ===200){
           //var response = JSON.parse(xhr.responseText);
-
-        this.setState({
-            test: xhr.responseText
-        });
+            if(xhr.responseText !== 'null' || xhr.responseText !== "")
+            {
+                var arr_from_json = JSON.parse(xhr.responseText);
+                var itemArray = this.state.items;
+                arr_from_json.forEach(val => {
+                    itemArray.unshift({
+                        text: val.ID,
+                        key: Date.now()
+                    });
+                }) 
+                this.setState({
+                    showResults: false
+                });              
+            }
+            console.log(itemArray);
+            this.setState({
+                items: itemArray
+            });
         }
     }
     render(){
         return(
-        <div className="ipAddresContainer">
-            <div className="header">
-                <form>
-                    <input placeholder="Podaj IP Servera" ref={(ip) => this.LoginModel.ip_address = ip}/>
-                </form>
-                <p></p>
-                <form> 
-                    <input placeholder="Podaj Port Servera" ref={(port) => this.LoginModel.port_server = port}/>
-                </form>
-                <p></p>
-                <form>
-                    <input placeholder="Podaj AET Servera" ref={(AET) => this.LoginModel.aet_server = AET}/>
-                </form>
-                <p></p>
-                <form> 
-                    <input placeholder="Podaj Port Klienta" ref={(port) => this.LoginModel.port_client = port}/>
-                </form>
-                <p></p>
-                <form> 
-                    <input placeholder="Podaj AET Klienta" ref={(AET) => this.LoginModel.aet_client = AET}/>
-                </form>
+            <div className="todoListMain">
+                <div className="header"
+                style={{ display: this.state.showResults ? "block" : "none" }}>
+                <h1>Parametry połączenia</h1>
+                <ul>
+                    <input placeholder="Podaj IP Servera" ref={(ip) => this.LoginModel.ip_address = ip} defaultValue="127.0.0.1"/>
+                    <input placeholder="Podaj Port Servera" ref={(port) => this.LoginModel.port_server = port} defaultValue="10100"/>
+                    <input placeholder="Podaj AET Servera" ref={(AET) => this.LoginModel.aet_server = AET} defaultValue="ARCHIWUM"/>
+                    <input placeholder="Podaj Port Klienta" ref={(port) => this.LoginModel.port_client = port} defaultValue="10104"/>
+                    <input placeholder="Podaj AET Klienta" ref={(AET) => this.LoginModel.aet_client = AET} defaultValue="KLIENTL"/>
+                    
+                <button type="button" onClick={this.SendInfo}>Połącz</button>  
+                </ul> 
+                </div>
+                <div
+                style={{ display: this.state.showResults ? "none" :"block" }}>
+                    
+                <h1>Lista Pacjentów</h1>  
+                <ListOfPatient entries={this.state.items}
+                            requestForSeries={this.selectedItem} 
+                            loginModel ={this.LoginModel}/>
+                </div>
                 
-            
-                <form onClick={this.SendInfo}> 
-                <button type="button">Połącz</button>   
-                </form> 
-            </div>
-        </div>
+            </div>       
         );
     }
 }
